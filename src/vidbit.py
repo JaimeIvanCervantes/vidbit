@@ -27,7 +27,11 @@ def main(fileName, frameMax, scale):
 		width = fmf.get_width()
 		height = fmf.get_height()
 	 
-	 	frameCount = 1
+		# Open h5 file and initalize dataset
+		h5File = h5py.File("/opt/local/kristin/buffer.h5",'w')
+		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None,width,height,1) )
+	 
+	 	frameCount = 0
 	 
 		while frameCount < frameMax or frameMax == 0 :
 			try:
@@ -35,7 +39,14 @@ def main(fileName, frameMax, scale):
 			except FMF.NoMoreFramesException, err:
 				break
 			
+			dataset.resize( (frameCount+1,) + (width,height,1) )
+			dataset[frameCount,:,:,:] = frame[:,:,None]
+			
 			frameCount += 1
+			
+		# Close, deallocate and release	
+		h5File.close()
+		cv2.destroyAllWindows()
  
 	elif extension == '.avi' :
 		videoFileName = fileName
@@ -56,7 +67,7 @@ def main(fileName, frameMax, scale):
 	
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1,)+frame.shape, maxshape=(None,)+frame.shape)#data.shape[1:])
+		dataset = h5File.create_dataset("data", (1,)+frame.shape, maxshape=(None,)+frame.shape)
 		dataset[0,:,:,:] = frame
 		
 		# Loop through each frame
@@ -85,7 +96,7 @@ def main(fileName, frameMax, scale):
 
 if __name__ == "__main__":
     
-	sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Fly_Bubble/cx_JRC_SS03500_CsChr_RigD_20150512T092542/movie.ufmf')
+	sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Fly_Bowl/GMR_71G01_AE_01_TrpA_Rig2Plate14BowlC_20110707T154934/movie.ufmf')
 	#sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
 	sys.argv.append('10')
 	sys.argv.append('0.2')
