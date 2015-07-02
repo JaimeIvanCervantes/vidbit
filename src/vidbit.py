@@ -3,11 +3,11 @@ import h5py
 import sys
 import numpy as np
 import os
+import math
 
 import ufmf
 
-def main(fileName, frameMax, scale):
-
+def main(fileName, frameMax, scale, sampled):
 	# Get name and extension
 	name, extension = os.path.splitext(fileName)
 
@@ -20,33 +20,43 @@ def main(fileName, frameMax, scale):
 		print "Processing ufmf file"
 		
 		videoFileName = fileName
-		h5FileName = name + '.h5'
+		h5FileName = name + '.h5' 
 		
 		fmf = ufmf.FlyMovieEmulator(videoFileName)
-			
+		
+		frameNum = fmf.get_n_frames()
+		frameStep = int( math.floor(frameNum/frameMax) )	
 		width = fmf.get_width()
 		height = fmf.get_height()
+		
+		print "Sampled: ", sampled
+		print "Frame Step: ", frameStep
 	 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File("/opt/local/kristin/buffer.h5",'w')
 		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None,width,height,1) )
 	 
+	 	frameSavedCount = 0
 	 	frameCount = 0
 	 
-		while frameCount < frameMax or frameMax == 0 :
+		while frameCount < frameNum and (frameCount < frameMax or frameMax == 0 or sampled == 1) :
 			try:
 				frame,timestamp = fmf.get_next_frame()
 			except FMF.NoMoreFramesException, err:
 				break
 			
-			dataset.resize( (frameCount+1,) + (width,height,1) )
-			dataset[frameCount,:,:,:] = frame[:,:,None]
+			if sampled == 0 or frameCount % frameStep:
+				print "Saving frame: ", frameCount
+				dataset.resize( (frameSavedCount+1,) + (width,height,1) )
+				dataset[frameSavedCount,:,:,:] = frame[:,:,None]
+				frameSavedCount += 1
 			
 			frameCount += 1
 			
+			
 		# Close, deallocate and release	
 		h5File.close()
-		cv2.destroyAllWindows()
+		#cv2.destroyAllWindows()
  
 	elif extension == '.avi' :
 		videoFileName = fileName
@@ -83,32 +93,39 @@ def main(fileName, frameMax, scale):
 			dataset.resize((frameCount+1,) + frame.shape)
 			dataset[frameCount,:,:,:] = frame
 					
-			cv2.imshow('Frame', frame)
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				break
+			#cv2.imshow('Frame', frame)
+			#if cv2.waitKey(1) & 0xFF == ord('q'):
+			#	break
 	
 			frameCount += 1
 	
 		# Close, deallocate and release	
 		h5File.close()
 		cap.release()
-		cv2.destroyAllWindows()
+		#cv2.destroyAllWindows()
+
+	print "Done"
 
 if __name__ == "__main__":
     
 	sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Fly_Bowl/GMR_71G01_AE_01_TrpA_Rig2Plate14BowlC_20110707T154934/movie.ufmf')
 	#sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
 	sys.argv.append('10')
-	sys.argv.append('0.2')
+	sys.argv.append('0.5')
+	sys.argv.append('1')
     	 
 	if len(sys.argv[1:]) < 1:
-		print "Usage: {} <video/HDF5-file> <file-type> <number-of-frames> <scale>".format( sys.argv[0] )
+		print "Usage: {} <video/HDF5-file> <number-of-frames> <scale> <sampled-equally-spaced>".format( sys.argv[0] )
 		sys.exit(1)
 	elif len(sys.argv[1:]) == 1:
 		sys.argv.append('0')
 		sys.argv.append('1.0')
+		sys.argv.append('0')
 	elif len(sys.argv[1:]) == 2:
 		sys.argv.append('1.0')
+		sys.argv.append('0')
+	elif len(sys.argv[1:]) == 3:
+		sys.argv.append('0')
 	
-	main( sys.argv[1], int(sys.argv[2]), float(sys.argv[3]) )
+	main( sys.argv[1], int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]) )
 
