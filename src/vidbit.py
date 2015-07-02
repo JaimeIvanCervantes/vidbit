@@ -28,13 +28,10 @@ def main(fileName, frameMax, scale, sampled):
 		frameStep = int( math.floor(frameNum/frameMax) )	
 		width = fmf.get_width()
 		height = fmf.get_height()
-		
-		print "Sampled: ", sampled
-		print "Frame Step: ", frameStep
-	 
+			 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File("/opt/local/kristin/buffer.h5",'w')
-		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None,width,height,1) )
+		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None, width, height, 1) )
 	 
 	 	frameSavedCount = 0
 	 	frameCount = 0
@@ -44,8 +41,8 @@ def main(fileName, frameMax, scale, sampled):
 				frame,timestamp = fmf.get_next_frame()
 			except FMF.NoMoreFramesException, err:
 				break
-			
-			if sampled == 0 or frameCount % frameStep:
+						
+			if sampled == 0 or frameCount % frameStep == 0:
 				print "Saving frame: ", frameCount
 				dataset.resize( (frameSavedCount+1,) + (width,height,1) )
 				dataset[frameSavedCount,:,:,:] = frame[:,:,None]
