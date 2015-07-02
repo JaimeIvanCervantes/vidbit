@@ -7,7 +7,9 @@ import math
 
 import ufmf
 
-def main(fileName, frameMax, scale, sampled):
+AXISTAGS = '{\n  "axes": [\n    {\n      "key": "t",\n      "typeFlags": 8,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "y",\n      "typeFlags": 2,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "x",\n      "typeFlags": 2,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "c",\n      "typeFlags": 1,\n      "resolution": 0,\n      "description": ""\n    }\n  ]\n}'
+
+def main(fileName, outFileName, frameMax, scale, sampled):
 	# Get name and extension
 	name, extension = os.path.splitext(fileName)
 
@@ -20,19 +22,23 @@ def main(fileName, frameMax, scale, sampled):
 		print "Processing ufmf file"
 		
 		videoFileName = fileName
-		h5FileName = name + '.h5' 
+		if outFileName == '' :
+			h5FileName = name + '.h5'
+		else :
+			h5FileName = outFileName
 		
 		fmf = ufmf.FlyMovieEmulator(videoFileName)
 		
 		frameNum = fmf.get_n_frames()
-		frameStep = int( math.floor(frameNum/frameMax) )	
+		frameStep = int( math.ceil(frameNum/(frameMax-1) ) )
 		width = fmf.get_width()
 		height = fmf.get_height()
 			 
 		# Open h5 file and initalize dataset
-		h5File = h5py.File("/opt/local/kristin/buffer.h5",'w')
-		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None, width, height, 1) )
-	 
+		h5File = h5py.File(h5FileName,'w')
+		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None, width, height, 1), chunks=(1, width, height, 1) )
+		dataset.attrs['axistags'] = AXISTAGS
+		
 	 	frameSavedCount = 0
 	 	frameCount = 0
 	 
@@ -48,8 +54,7 @@ def main(fileName, frameMax, scale, sampled):
 				dataset[frameSavedCount,:,:,:] = frame[:,:,None]
 				frameSavedCount += 1
 			
-			frameCount += 1
-			
+			frameCount += 1	
 			
 		# Close, deallocate and release	
 		h5File.close()
@@ -105,24 +110,30 @@ def main(fileName, frameMax, scale, sampled):
 
 if __name__ == "__main__":
     
+    #sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
 	sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Fly_Bowl/GMR_71G01_AE_01_TrpA_Rig2Plate14BowlC_20110707T154934/movie.ufmf')
-	#sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
+	sys.argv.append('/groups/branson/home/cervantesj/public/JaimeProfiling/Alice/movie.h5')
 	sys.argv.append('10')
-	sys.argv.append('0.5')
+	sys.argv.append('1.0')
 	sys.argv.append('1')
     	 
 	if len(sys.argv[1:]) < 1:
-		print "Usage: {} <video/HDF5-file> <number-of-frames> <scale> <sampled-equally-spaced>".format( sys.argv[0] )
+		print "Usage: {} <video-file> <out-file> <number-of-frames> <scale> <sampled-equally-spaced>".format( sys.argv[0] )
 		sys.exit(1)
 	elif len(sys.argv[1:]) == 1:
+		sys.argv.append('')
 		sys.argv.append('0')
 		sys.argv.append('1.0')
 		sys.argv.append('0')
 	elif len(sys.argv[1:]) == 2:
+		sys.argv.append('0')
 		sys.argv.append('1.0')
 		sys.argv.append('0')
 	elif len(sys.argv[1:]) == 3:
+		sys.argv.append('1.0')
+		sys.argv.append('0')
+	elif len(sys.argv[1:]) == 4:
 		sys.argv.append('0')
 	
-	main( sys.argv[1], int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]) )
+	main( sys.argv[1], sys.argv[2], int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]) )
 
