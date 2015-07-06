@@ -36,7 +36,7 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 			 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1,width,height,1) , maxshape=(None, width, height, 1), chunks=(1, width, height, 1) )
+		dataset = h5File.create_dataset("data", (1,height,width,1) , maxshape=(None, height, width, 1), chunks=(1, height, width, 1) )
 		dataset.attrs['axistags'] = AXISTAGS
 		
 	 	frameSavedCount = 0
@@ -47,13 +47,15 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 				frame,timestamp = fmf.get_next_frame()
 			except FMF.NoMoreFramesException, err:
 				break
-						
+									
 			if sampled == 0 or frameCount % frameStep == 0:
 				print "Saving frame: ", frameCount
-				dataset.resize( (frameSavedCount+1,) + (width,height,1) )
+				dataset.resize( (frameSavedCount+1,) + (height,width,1) )
 				dataset[frameSavedCount,:,:,:] = frame[:,:,None]
 				frameSavedCount += 1
+
 			
+
 			frameCount += 1	
 			
 		# Close, deallocate and release	
@@ -72,11 +74,11 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		if (ret == False) :
 			print "Error reading .avi video file."
 			exit(1)
-		
+					
 		# Resize and invert color channel order in order to be compatible with ilastik
 		frame = cv2.resize(frame, None, fx=scale, fy=scale)
 		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)	
-	
+		
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
 		dataset = h5File.create_dataset("data", (1,)+frame.shape, maxshape=(None,)+frame.shape)
@@ -111,11 +113,12 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 if __name__ == "__main__":
     
     #sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
-	sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Fly_Bowl/GMR_71G01_AE_01_TrpA_Rig2Plate14BowlC_20110707T154934/movie.ufmf')
-	sys.argv.append('/groups/branson/home/cervantesj/public/JaimeProfiling/Alice/movie.h5')
-	sys.argv.append('10')
-	sys.argv.append('1.0')
-	sys.argv.append('1')
+	#sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/FCF_pBDPGAL4U_1500437_TrpA_Rig2Plate17BowlD_20121121T152832/movie.ufmf')
+	#sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Courtship_Bowls/shelbyCSMH_25C_Rig1BowlA_20141111T143505/movie.ufmf')
+	#sys.argv.append('/groups/branson/home/cervantesj/public/JaimeProfiling/Alice/movie.h5')
+	#sys.argv.append('10')
+	#sys.argv.append('1.0')
+	#sys.argv.append('1')
     	 
 	if len(sys.argv[1:]) < 1:
 		print "Usage: {} <video-file> <out-file> <number-of-frames> <scale> <sampled-equally-spaced>".format( sys.argv[0] )
