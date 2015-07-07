@@ -33,10 +33,11 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		frameStep = int( math.ceil(frameNum/(frameMax-1) ) )
 		width = fmf.get_width()
 		height = fmf.get_height()
+		channels = 1
 			 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1,height,width,1) , maxshape=(None, height, width, 1), chunks=(1, height, width, 1) )
+		dataset = h5File.create_dataset("data", (1,height,width,channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='u8')
 		dataset.attrs['axistags'] = AXISTAGS
 		
 	 	frameSavedCount = 0
@@ -90,7 +91,7 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 	
 		# Open h5 file and initialize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1, height, width, channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels) )
+		dataset = h5File.create_dataset("data", (1, height, width, channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='u8')
 		dataset.attrs['axistags'] = AXISTAGS
 		#dataset = h5File.create_dataset("data", (1,)+frame.shape, maxshape=(None,)+frame.shape)
 		#dataset[0,:,:,:] = frame
@@ -114,10 +115,6 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 				dataset.resize((frameSavedCount+1,) + frame.shape)
 				dataset[frameSavedCount,:,:,:] = frame
 				frameSavedCount += 1
-					
-			#cv2.imshow('Frame', frame)
-			#if cv2.waitKey(1) & 0xFF == ord('q'):
-			#	break
 	
 			frameCount += 1
 	
