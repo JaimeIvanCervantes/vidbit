@@ -37,7 +37,7 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 			 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1,height,width,channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='u8')
+		dataset = h5File.create_dataset("data", (1,height,width,channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='uint8')
 		dataset.attrs['axistags'] = AXISTAGS
 		
 	 	frameSavedCount = 0
@@ -87,11 +87,11 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		frameStep = int( math.ceil(frameNum/(frameMax-1) ) )
 		width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-		channels = 3
+		channels = 1
 	
 		# Open h5 file and initialize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1, height, width, channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='u8')
+		dataset = h5File.create_dataset("data", (1, height, width, channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='uint8')
 		dataset.attrs['axistags'] = AXISTAGS
 		#dataset = h5File.create_dataset("data", (1,)+frame.shape, maxshape=(None,)+frame.shape)
 		#dataset[0,:,:,:] = frame
@@ -99,16 +99,17 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		# Loop through each frame
 	 	frameSavedCount = 0
 	 	frameCount = 0
-		while(cap.isOpened() and frameCount < frameNum and (frameCount < frameMax or frameMax == 0 or sampled == 1) ):
+		while(frameCount < frameNum and (frameCount < frameMax or frameMax == 0 or sampled == 1) ):
 			# Read frame
 			ret, frame = cap.read()
 			
-			if (ret == False) :
+			if (ret == False and cap.isOpened() ) :
 				break
 			
 			# Resize and invert color channel order in order to be compatible with ilastik
 			# frame = cv2.resize(frame, None, fx=scale, fy=scale) 
-			frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)	
+			frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)	
+			frame = frame[:,:,None]
 			
 			if sampled == 0 or frameCount % frameStep == 0:
 				print "Saving frame: ", frameCount
