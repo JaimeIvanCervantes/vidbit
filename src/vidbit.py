@@ -4,12 +4,21 @@ import sys
 import numpy as np
 import os
 import math
-
+import argparse
 import ufmf
 
 AXISTAGS = '{\n  "axes": [\n    {\n      "key": "t",\n      "typeFlags": 8,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "y",\n      "typeFlags": 2,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "x",\n      "typeFlags": 2,\n      "resolution": 0,\n      "description": ""\n    },\n    {\n      "key": "c",\n      "typeFlags": 1,\n      "resolution": 0,\n      "description": ""\n    }\n  ]\n}'
 
-def main(fileName, outFileName, frameMax, scale, sampled):
+def main(parsedArgs) :
+#def main(fileName, outFileName, frameMax, scale, sampled):
+	
+	# Get arguments
+	fileName = parsedArgs.video_file
+	outFileName = parsedArgs.output_file
+	frameMax = parsedArgs.frames
+	scale = parsedArgs.scale
+	sampled = parsedArgs.spaced
+	
 	# Get name and extension
 	name, extension = os.path.splitext(fileName)
 
@@ -29,6 +38,7 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		
 		fmf = ufmf.FlyMovieEmulator(videoFileName)
 		
+		# Get video parameters
 		frameNum = fmf.get_n_frames()
 		frameStep = int( math.ceil(frameNum/(frameMax-1) ) )
 		width = fmf.get_width()
@@ -83,6 +93,7 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 		# frame = cv2.resize(frame, None, fx=scale, fy=scale)
 		#frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)	
 
+		# Get video parameters
 		frameNum = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 		frameStep = int( math.ceil(frameNum/(frameMax-1) ) )
 		width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -127,33 +138,16 @@ def main(fileName, outFileName, frameMax, scale, sampled):
 	print "Done"
 
 if __name__ == "__main__":
-    
-    #sys.argv.append('/opt/local/primoz/CantonS_decap_dust_3_2.avi')
-	#sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/FCF_pBDPGAL4U_1500437_TrpA_Rig2Plate17BowlD_20121121T152832/movie.ufmf')
-	#sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Alice/Courtship_Bowls/shelbyCSMH_25C_Rig1BowlA_20141111T143505/movie.ufmf')
-	#sys.argv.append('/groups/branson/home/cervantesj/public/KristinTrackingTestData/Egnorlab/Kelly_two_white_mice_open_cage/m41809_f49501_together_20130125 - frames 8108-8789.avi')
-	#sys.argv.append('/opt/local/frames.h5')
-	#sys.argv.append('10')
-	#sys.argv.append('1.0')
-	#sys.argv.append('1')
-    	 
-	if len(sys.argv[1:]) < 1:
-		print "Usage: {} <video-file> <out-file> <number-of-frames> <scale> <sampled-equally-spaced>".format( sys.argv[0] )
-		sys.exit(1)
-	elif len(sys.argv[1:]) == 1:
-		sys.argv.append('')
-		sys.argv.append('0')
-		sys.argv.append('1.0')
-		sys.argv.append('0')
-	elif len(sys.argv[1:]) == 2:
-		sys.argv.append('0')
-		sys.argv.append('1.0')
-		sys.argv.append('0')
-	elif len(sys.argv[1:]) == 3:
-		sys.argv.append('1.0')
-		sys.argv.append('0')
-	elif len(sys.argv[1:]) == 4:
-		sys.argv.append('0')
+
+	parser = argparse.ArgumentParser( description="Export video to HDF5 format." )
 	
-	main( sys.argv[1], sys.argv[2], int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]) )
+	parser.add_argument('--video_file', help='Name of video file to process.', required=True)
+	parser.add_argument('--output_file', help='Name of output HDF5 file.', required=True)
+	parser.add_argument('--scale', help='Scale the width and height of each frame.', default=1.0, type=float)
+	parser.add_argument('--frames', help='Maximum number of frames.', default=0, type=int)
+	parser.add_argument('--spaced', help='Sample at equally spaced intervals.', default=1, type=int)
+	
+	parsedArgs, workflowCmdlineArgs = parser.parse_known_args()
+	
+	main(parsedArgs)
 
