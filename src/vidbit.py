@@ -22,7 +22,6 @@ def main(parsedArgs) :
 	name, extension = os.path.splitext(inFileName)
 
 	# Detect file extension and decide if video to hdf5, or hdf5 to video.
-	videoFileName = None
 	if extension == '.h5':
 		if not outFileName:
 			outFileName = name + '.avi'
@@ -52,14 +51,13 @@ def main(parsedArgs) :
 		
 	elif extension == '.mmf':	
 		print "Processing mmf file"
-		videoFileName = inFileName
 		
-		if outFileName == '':
+		if outFileName:
 			h5FileName = name + '.h5'
 		else :
 			h5FileName = outFileName
 			
-		mmf = MmfParser.MmfParser(videoFileName)
+		mmf = MmfParser.MmfParser(inFileName)
 		
 		frameNum = mmf.getNumberOfFrames()
 		
@@ -93,14 +91,12 @@ def main(parsedArgs) :
 	elif extension == '.ufmf':
 		print "Processing ufmf file"
 		
-		videoFileName = inFileName
-		
 		if outFileName == '':
 			h5FileName = name + '.h5'
 		else :
 			h5FileName = outFileName
 		
-		fmf = ufmf.FlyMovieEmulator(videoFileName)
+		fmf = ufmf.FlyMovieEmulator(inFileName)
 		
 		# Get video parameters
 		frameNum = fmf.get_n_frames()
@@ -137,15 +133,13 @@ def main(parsedArgs) :
 		#cv2.destroyAllWindows()
  
 	elif extension == '.avi' or extension == '.mov':
-		videoFileName = inFileName
-		
 		if outFileName == '':
 			h5FileName = name + '.h5'
 		else :
 			h5FileName = outFileName
 
 		# Capture video (requires ffmpeg and cv2 installed)
-		cap = cv2.VideoCapture(videoFileName)
+		cap = cv2.VideoCapture(inFileName)
 		
 		# Read first frame for memory pre-allocation and exceptions
 		'''
