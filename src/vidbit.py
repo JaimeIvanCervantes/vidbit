@@ -107,13 +107,13 @@ def main(parsedArgs) :
 			 
 		# Open h5 file and initalize dataset
 		h5File = h5py.File(h5FileName,'w')
-		dataset = h5File.create_dataset("data", (1,height,width,channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='uint8')
+		dataset = h5File.create_dataset("data", (1,height,width,channels) , maxshape=(None, height, width, channels), chunks=(1, height, width, channels), dtype='uint8', compression='gzip')
 		dataset.attrs['axistags'] = AXISTAGS
 		
 	 	frameSavedCount = 0
 	 	frameCount = 0
 	 
-		while frameCount < frameNum and (frameCount < frameMax or frameMax == 0 or sampled == 1):
+		while frameCount < frameNum and (frameCount < frameMax or frameMax == 0): # or sampled == 1):
 			try:
 				frame,timestamp = fmf.get_next_frame()
 			except FMF.NoMoreFramesException, err:
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 	parser.add_argument('--output-file', help='Name of output HDF5 file.', default = '')
 	parser.add_argument('--scale', help='Scale the width and height of each frame.', default=1.0, type=float)
 	parser.add_argument('--frames', help='Maximum number of frames.', default=0, type=int)
-	parser.add_argument('--spaced', help='Sample at equally spaced intervals.', default=1, type=int)
+	parser.add_argument('--spaced', help='Sample at equally spaced intervals.', default=0, type=int)
 	
 	parsedArgs, workflowCmdlineArgs = parser.parse_known_args()
 	
