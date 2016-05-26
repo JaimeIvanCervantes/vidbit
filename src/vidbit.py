@@ -15,6 +15,7 @@ def main(parsedArgs) :
 	inFileName = parsedArgs.input_file
 	outFileName = parsedArgs.output_file
 	frameMax = parsedArgs.frames
+	startFrame = parsedArgs.start_frame
 	scale = parsedArgs.scale
 	sampled = parsedArgs.spaced
 	
@@ -113,18 +114,18 @@ def main(parsedArgs) :
 	 	frameSavedCount = 0
 	 	frameCount = 0
 	 
-		while frameCount < frameNum and (frameCount < frameMax or frameMax == 0): # or sampled == 1):
+		while frameCount < frameNum and (frameCount < startFrame + frameMax or frameMax == 0): # or sampled == 1):
 			try:
 				frame,timestamp = fmf.get_next_frame()
+				
+				if frameCount >= startFrame and (sampled == 0 or frameCount % frameStep == 0):
+					print "Saving frame: ", frameCount
+					dataset.resize( (frameSavedCount+1,) + (height,width,1) )
+					dataset[frameSavedCount,:,:,:] = frame[:,:,None]
+					frameSavedCount += 1
 			except FMF.NoMoreFramesException, err:
 				break
 									
-			if sampled == 0 or frameCount % frameStep == 0:
-				print "Saving frame: ", frameCount
-				dataset.resize( (frameSavedCount+1,) + (height,width,1) )
-				dataset[frameSavedCount,:,:,:] = frame[:,:,None]
-				frameSavedCount += 1
-
 			frameCount += 1	
 			
 		# Close, deallocate and release	
@@ -204,7 +205,8 @@ if __name__ == "__main__":
 	parser.add_argument('--input-file', help='Name of video file to process.', required=True)
 	parser.add_argument('--output-file', help='Name of output HDF5 file.', default = '')
 	parser.add_argument('--scale', help='Scale the width and height of each frame.', default=1.0, type=float)
-	parser.add_argument('--frames', help='Maximum number of frames.', default=0, type=int)
+	parser.add_argument('--frames', help='Maximum number of frames (from start frame).', default=0, type=int)
+	parser.add_argument('--start-frame', help='Start frame.', default=0, type=int)
 	parser.add_argument('--spaced', help='Sample at equally spaced intervals.', default=0, type=int)
 	
 	parsedArgs, workflowCmdlineArgs = parser.parse_known_args()
